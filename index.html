@@ -10,11 +10,9 @@
   <h1>
     ECE 4180 Final Project- mbed Rythm Game
   </h1>
-  <br>
   <h2>
     by Andrew McEntaggart, Sultan Sayedzada, Keshav Shenoy
   </h2>
-  <br>
   <p>
     For the final project, we designed and built a rhythm-based movement evasion game, inspired by the indie dungeoner <a href="https://store.steampowered.com/app/247080/Crypt_of_the_NecroDancer/">Crypt of the Necrodancer</a>. We incorporated some key features of Crypt of the Necrodancer into our mbed version. For instance, music plays throughout the game. The player character can move once per beat, which follows the music and is also indicated by a flashing LED on the mbed. Enemies, scattered randomly throughout the floor, can kill the player and end the game if moved into. After reaching the staircase on the first floor and evading the boss on the second, the game ends.
   </p>
@@ -85,7 +83,6 @@ void actionable(int i) {
 }
   </code>
   </pre>
-<br>
 A separate thread controls the speaker, which is synced up with the timer carefully to enable players to move on the beat.
 <br>
 <pre>
@@ -178,7 +175,6 @@ void drawGB() {
 }
 </code>
 </pre>
-<br>
 The full repository is published <a href="https://os.mbed.com/users/amcentag/code/crypt_mbed/">here</a>.
 
 </body>
