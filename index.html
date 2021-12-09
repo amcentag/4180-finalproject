@@ -41,7 +41,8 @@
     Code
   </h3>
   The game uses multi-threading to control the speakers, poll the Bluetooth serial interface, and run the timer simultaneously. The `clk` method, for instance, is attached to the timer thread and updates a variable `counter` which is later used to determine if an action input from the Bluetooth is valid or not.
-  The code below also updates a helpful LED that displays when the beat is on or off, as well as calling the function for processing enemy actions.
+  The action is only processed by the code if it was made sufficiently close to the beat hit, i.e. if it was received within a quarter of a period of the beat change.
+   The code below also updates a helpful LED that displays when the beat is on or off, as well as calling the function for processing enemy actions.
   <pre>
   <code>
 void clk() {
@@ -178,6 +179,6 @@ void drawGB() {
 </code>
 </pre>
 <br>
-
+The full repository is published <a href="https://os.mbed.com/users/amcentag/code/crypt_mbed/">here</a>.
 
 </body>
