@@ -31,16 +31,17 @@
   <p>
   The mbed interfaces with a <a href="https://os.mbed.com/users/4180_1/notebook/ulcd-144-g2-128-by-128-color-lcd/">uLCD display</a> an <a href="https://os.mbed.com/users/4180_1/notebook/adafruit-bluefruit-le-uart-friend---bluetooth-low-/">Adafruit Bluetooth UART Friend</a>, and a Class D Audio Amp connected to a speaker.
   </p>
-  <img src="qw.jpg" alt="">
+  <img src="qw.png" alt="">
   <br>
   The audio amp takes power from the Vout pin on the mbed, which draws less current and makes the PWM sound less obnoxious.
   <br>
-  <img src="qwe.jpg" alt="">
-  <img src="qwer.jpg" alt="">
+  <img src="qwe.png" alt="">
+  <img src="qwer.png" alt="">
   <h3>
     Code
   </h3>
   The game uses multi-threading to control the speakers, poll the Bluetooth serial interface, and run the timer simultaneously. The `clk` method, for instance, is attached to the timer thread and updates a variable `counter` which is later used to determine if an action input from the Bluetooth is valid or not.
+  The code below also updates a helpful LED that displays when the beat is on or off, as well as calling the function for processing enemy actions.
   <pre>
   <code>
 void clk() {
@@ -83,4 +84,100 @@ void actionable(int i) {
 }
   </code>
   </pre>
+<br>
+A separate thread controls the speaker, which is synced up with the timer carefully to enable players to move on the beat.
+<br>
+<pre>
+<code>
+float note[64]= {293.66, 440.00, 329.66, 440.00, 349.23, 440.00, 392.00, 440.00,
+
+                 349.23, 440.00, 329.66, 440.00, 293.66, 440.00, 277.18, 440.00,
+
+                 293.66, 440.00, 329.66, 440.00, 349.23, 440.00, 392.00, 440.00,
+
+                 349.23, 440.00, 329.66, 440.00, 293.66, 440.00, 277.18, 440.00,
+
+                 233.08, 440.00, 261.63, 440.00, 293.66, 440.00, 329.66, 440.00,
+
+                 349.23, 440.00, 329.66, 440.00, 293.66, 440.00, 261.63, 440.00,
+
+                 261.63, 440.00, 293.66, 440.00, 329.66, 440.00, 349.23, 440.00,
+
+                 392.00, 440.00, 349.23, 440.00, 329.66, 440.00, 293.66, 440.00
+
+                };
+
+ 
+
+void speaker_thread()
+{
+    while(1){
+        for(int i = 0; i < 64; i++) {
+        speaker.period(1.0/note[i]);
+        speaker = 0.3;
+        Thread::wait(1000);
+    }}
+    
+}
+</code>
+</pre>
+
+The game board is another important piece of the puzzle that manages all of the in-game interactions. This variable is referenced by almost every function within the code and, as such, is carefully managed with mutexes and specialized functions. Two of those functions, which manage the screen updates on each beat and action, are shown below.
+<pre>
+<code>
+void drawSquare(int i, int j, int temp) {
+    if (temp == 0) { // empty
+        if (level == 1) {
+            uLCD.filled_rectangle(i * 9 + 1, j * 9 + 1, i * 9 + 8, j * 9 + 8, YELLOW);
+        } else if (level == 2) {
+            uLCD.filled_rectangle(i * 9 + 1, j * 9 + 1, i * 9 + 8, j * 9 + 8, 0x00FF00);
+        }
+    } else if (temp == pl1) { // player
+        uLCD.filled_rectangle(i*9+2,j*9+6,i*9+3,j*9+7,RED);
+        uLCD.filled_rectangle(i*9+6,j*9+6,i*9+7,j*9+7,RED);
+        uLCD.line(i*9+3,j*9+5,i*9+3,j*9+2,RED);
+        uLCD.line(i*9+7,j*9+5,i*9+7,j*9+2,RED);
+        uLCD.line(i*9+3,j*9+2,i*9+8,j*9+2,RED);
+    }  else if (temp == pl2) { // player
+        uLCD.filled_rectangle(i*9+2,j*9+6,i*9+3,j*9+7,BLUE);
+        uLCD.filled_rectangle(i*9+6,j*9+6,i*9+7,j*9+7,BLUE);
+        uLCD.line(i*9+3,j*9+5,i*9+3,j*9+2,BLUE);
+        uLCD.line(i*9+7,j*9+5,i*9+7,j*9+2,BLUE);
+        uLCD.line(i*9+3,j*9+2,i*9+8,j*9+2,BLUE);
+    } else if (temp == w) {
+        uLCD.filled_rectangle(i * 9 + 2, j * 9 + 2, i * 9 + 7, j * 9 + 7, BROWN);
+    } else if (temp == slime) {
+        uLCD.filled_rectangle(i * 9 + 2, j * 9 + 2, i * 9 + 5, j * 9 + 5, RED);
+        uLCD.filled_rectangle(i * 9 + 5, j * 9 + 5, i * 9 + 7, j * 9 + 7, RED);
+    } else if (temp == slime2 || temp == slime3) {
+        uLCD.filled_rectangle(i * 9 + 2, j * 9 + 2, i * 9 + 5, j * 9 + 5, GREN);
+        uLCD.filled_rectangle(i * 9 + 5, j * 9 + 5, i * 9 + 7, j * 9 + 7, GREN);
+    } else if (temp == stc) {
+        uLCD.filled_rectangle(i*9 + 6, j * 9 + 1, i*9 + 7, j*9 + 7, 0);
+        uLCD.filled_rectangle(i*9 + 4, j * 9 + 3, i*9 + 5, j*9 + 7, 0);
+        uLCD.filled_rectangle(i*9 + 2, j * 9 + 5, i*9 + 3, j*9 + 7, 0);
+    } else if (temp == 8) {
+        uLCD.filled_rectangle(i*9 + 2, j * 9 + 2, i*9 + 2, j*9 + 7, 0xFFFFFF);
+        uLCD.filled_rectangle(i*9 + 4, j * 9 + 2, i*9 + 4, j*9 + 7, 0xFFFFFF);
+        uLCD.filled_rectangle(i*9 + 6, j * 9 + 2, i*9 + 6, j*9 + 7, 0xFFFFFF);
+    }
+}
+
+void drawGB() {
+    //draw all squares from gameboard which changeboard indicates are changed
+    for (int i = 0; i < gb_SIZE; i++) {
+        for (int j =0; j < gb_SIZE; j++) {
+            if (changeBoard[i][j] > 0) {
+                int temp = gameBoard[i][j];
+                changeBoard[i][j] = 0;
+                drawSquare(i, j, temp);
+            }
+        }
+    }
+}
+</code>
+</pre>
+<br>
+
+
 </body>
