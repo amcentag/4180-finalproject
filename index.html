@@ -1,3 +1,11 @@
+<style>
+  pre code {
+    background-color: #eee;
+    border: 1px solid #999;
+    display: block;
+    padding: 20px;
+  }
+</style>
 <body>
   <h1>
     ECE 4180 Final Project- mbed Rythm Game
@@ -17,10 +25,62 @@
   <img src="proj1.jpg" alt="">
   <img src="proj2.jpg" alt="">
   <br>
-  <h1>
+  <h3>
     Wiring
-  </h1>
+  </h3>
   <p>
   The mbed interfaces with a <a href="https://os.mbed.com/users/4180_1/notebook/ulcd-144-g2-128-by-128-color-lcd/">uLCD display</a> an <a href="https://os.mbed.com/users/4180_1/notebook/adafruit-bluefruit-le-uart-friend---bluetooth-low-/">Adafruit Bluetooth UART Friend</a>, and a Class D Audio Amp connected to a speaker.
   </p>
+  <img src="qw.jpg" alt="">
+  <br>
+  The audio amp takes power from the Vout pin on the mbed, which draws less current and makes the PWM sound less obnoxious.
+  <br>
+  <img src="qwe.jpg" alt="">
+  <img src="qwer.jpg" alt="">
+  <h3>
+    Code
+  </h3>
+  The game uses multi-threading to control the speakers, poll the Bluetooth serial interface, and run the timer simultaneously. The `clk` method, for instance, is attached to the timer thread and updates a variable `counter` which is later used to determine if an action input from the Bluetooth is valid or not.
+  <pre>
+  <code>
+void clk() {
+    // Game code waits for input on a timer
+    beat = 1;
+    // Have clock increment a counter from 0 upZ to 100 (wait time depends on song [level])
+    for(;;) {
+        Thread::wait(levelTimes());
+        counter++;
+        if (counter > 100) {
+            counter = 1;
+        }
+        //reset ability to make action on half beat
+        if (counter == 50) {
+            processEnemyAction();
+            actLock = 1;
+            actLock2 = 1;
+        }
+        //indicate when a press is on beat. May need to alter according to calibration
+        if (counter == 25 || counter == 75) {
+            beat = !beat;
+        }
+    }
+}
+
+...
+
+void actionable(int i) {
+    if (actLock) {
+        actM.lock();
+        actLock = 0;
+        actM.unlock();
+        if (counter <= 25 || counter >= 75) {
+            currAction = i;
+        } else {
+            currAction = 0;
+        }
+        processAction();
+    }
+}
+  </code>
+  </pre>
 </body>
